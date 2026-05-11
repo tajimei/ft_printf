@@ -87,22 +87,30 @@ The following macros from `<stdarg.h>` are used:
 ```c
 int ft_printf(const char *format, ...)
 {
-    va_list ap;
+    va_list args;
     int     count;
 
-    va_start(ap, format);
-    count = ft_parse(format, ap);
-    va_end(ap);
+    va_start(args, format);
+    count = 0;
+    while (*format)
+    {
+        if (*format == '%' && *(format + 1))
+            count += ft_convert(*++format, args);
+        else
+            count += ft_putchar(*format);
+        format++;
+    }
+    va_end(args);
     return (count);
 }
 ```
 
 ### Conversion dispatch
 
-Depending on the character following `%`, the corresponding sub-function is called. Each sub-function returns the number of characters it output, which `ft_printf` accumulates to produce the final return value.
+Depending on the character following `%`, `ft_convert` calls the corresponding sub-function. Each sub-function returns the number of characters it output, which `ft_printf` accumulates to produce the final return value.
 
 ```
-ft_parse()
+ft_convert()
   └─ '%' detected
        ├─ 'c' → ft_putchar()
        ├─ 's' → ft_putstr()
@@ -110,12 +118,12 @@ ft_parse()
        ├─ 'd' / 'i' → ft_putnbr()
        ├─ 'u' → ft_putunsigned()
        ├─ 'x' / 'X' → ft_puthex()
-       └─ '%' → write('%', 1)
+       └─ '%' → ft_putchar('%')
 ```
 
 ### Number conversion
 
-To convert a number to a string, **recursion** or a **stack (array)** is used.
+To convert a number to a string, **recursion** is used.
 
 Example: integer → decimal string
 
@@ -185,6 +193,10 @@ make clean    # オブジェクトファイルを削除
 make fclean   # オブジェクトファイルと libftprintf.a を削除
 make re       # fclean + all
 
+# ボーナスパートのビルド（任意）
+make bonus
+```
+
 ### 自分のプロジェクトへの組み込み
 
 ```bash
@@ -234,22 +246,30 @@ C言語の `<stdarg.h>` が提供するマクロを使用します：
 ```c
 int ft_printf(const char *format, ...)
 {
-    va_list ap;
+    va_list args;
     int     count;
 
-    va_start(ap, format);
-    count = ft_parse(format, ap);
-    va_end(ap);
+    va_start(args, format);
+    count = 0;
+    while (*format)
+    {
+        if (*format == '%' && *(format + 1))
+            count += ft_convert(*++format, args);
+        else
+            count += ft_putchar(*format);
+        format++;
+    }
+    va_end(args);
     return (count);
 }
 ```
 
 ### 変換ディスパッチ
 
-`%` の次の文字に応じて対応するサブ関数を呼び出す構造にします。各サブ関数は出力した文字数を返し、`ft_printf` はそれを合算して最終的な文字数を戻り値として返します。
+`%` の次の文字に応じて `ft_convert` が対応するサブ関数を呼び出します。各サブ関数は出力した文字数を返し、`ft_printf` はそれを合算して最終的な文字数を戻り値として返します。
 
 ```
-ft_parse()
+ft_convert()
   └─ '%' 検出
        ├─ 'c' → ft_putchar()
        ├─ 's' → ft_putstr()
@@ -257,12 +277,12 @@ ft_parse()
        ├─ 'd' / 'i' → ft_putnbr()
        ├─ 'u' → ft_putunsigned()
        ├─ 'x' / 'X' → ft_puthex()
-       └─ '%' → write('%', 1)
+       └─ '%' → ft_putchar('%')
 ```
 
 ### 数値変換の考え方
 
-数値を文字列に変換する際は**再帰**または**スタック（配列）**を用います。
+数値を文字列に変換する際は**再帰**を用います。
 
 例：整数 → 10進数文字列
 
@@ -285,7 +305,6 @@ ft_parse()
 - [stdarg(3) - Linux man page](https://man7.org/linux/man-pages/man3/stdarg.3.html)
 - [C Standard Library Reference - cppreference.com](https://en.cppreference.com/w/c/io/fprintf)
 - [42 Norm](https://github.com/42School/norminette)
-
 
 ### AIの使用について
 

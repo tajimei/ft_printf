@@ -12,25 +12,38 @@
 
 #include "ft_printf.h"
 
-int	ft_putchar(char c)
+int	ft_putchar(int c)
 {
-	write(1, &c, 1);
+	char	ch;
+
+	ch = (char)c;
+	if (write(1, &ch, 1) == -1)
+		return (-1);
 	return (1);
+}
+
+size_t	ft_strlen(const char *s)
+{
+	size_t	index;
+
+	index = 0;
+	while (s[index])
+	{
+		index++;
+	}
+	return (index);
 }
 
 int	ft_putstr(char *str)
 {
-	int	count;
+	int	len;
 
 	if (!str)
 		return (ft_putstr("(null)"));
-	count = 0;
-	while (str[count])
-	{
-		write(1, &str[count], 1);
-		count++;
-	}
-	return (count);
+	len = ft_strlen(str);
+	if (write(1, str, len) == -1)
+		return (-1);
+	return (len);
 }
 
 int	ft_putnbr(int n)
@@ -39,6 +52,11 @@ int	ft_putnbr(int n)
 	int				count;
 
 	count = 0;
+	if (n == INT_MIN)
+	{
+		ft_putstr("-2147483648");
+		return (11);
+	}
 	if (n < 0)
 	{
 		count += ft_putchar('-');
@@ -60,33 +78,5 @@ int	ft_putunsigned(unsigned int n)
 	if (n >= 10)
 		count += ft_putunsigned(n / 10);
 	count += ft_putchar('0' + (n % 10));
-	return (count);
-}
-
-int	ft_puthex(unsigned long n, int uppercase)
-{
-	char	*digits;
-	int		count;
-
-	if (uppercase)
-		digits = "0123456789ABCDEF";
-	else
-		digits = "0123456789abcdef";
-	count = 0;
-	if (n >= 16)
-		count += ft_puthex(n / 16, uppercase);
-	count += ft_putchar(digits[n % 16]);
-	return (count);
-}
-
-int	ft_putptr(void *ptr)
-{
-	int	count;
-
-	if (!ptr)
-		return (ft_putstr("(nil)"));
-	count = 0;
-	count += ft_putstr("0x");
-	count += ft_puthex((unsigned long)ptr, 0);
 	return (count);
 }
