@@ -60,7 +60,7 @@ int main(void)
 
 ### Overall design
 
-The implementation of `ft_printf` is based on **sequential parsing of the format string**. The string is scanned one character at a time from the beginning: regular characters are written out as-is, and whenever a `%` is detected, the next character is examined to determine which conversion to apply.
+The implementation of `ft_printf` is based on **sequential parsing of the format string**. The string is scanned one character at a time using an integer index `i`. Regular characters are written out as-is via `write()`, and whenever a `%` is detected and a following character exists, the next character is examined to determine which conversion to apply.
 
 ```
 ft_printf("Hello %s, you are %d years old.\n", name, age)
@@ -72,39 +72,24 @@ ft_printf("Hello %s, you are %d years old.\n", name, age)
 [5] '\n' → output via write()
 ```
 
+The main loop calls `ft_process()` on each position. `ft_process()` handles two cases:
+
+- If the current character is `%` and a next character exists: calls `ft_convert()` and advances `i` by 2.
+- Otherwise: outputs the character as-is and advances `i` by 1.
+
+This means a lone `%` at the very end of the format string is treated as a literal `%` character.
+
 ### Handling variadic arguments
 
 The following macros from `<stdarg.h>` are used:
 
 - `va_start(ap, last)` : Initialize the variadic argument list
 - `va_arg(ap, type)` : Retrieve the next argument as the specified type
-- `va_copy(dst, src)` : Copy the argument list (when needed)
 - `va_end(ap)` : Clean up the argument list
-
-```c
-int ft_printf(const char *format, ...)
-{
-    va_list args;
-    int     count;
-
-    va_start(args, format);
-    count = 0;
-    while (*format)
-    {
-        if (*format == '%' && *(format + 1))
-            count += ft_convert(*++format, args);
-        else
-            count += ft_putchar(*format);
-        format++;
-    }
-    va_end(args);
-    return (count);
-}
-```
 
 ### Conversion dispatch
 
-Depending on the character following `%`, `ft_convert` calls the corresponding sub-function. Each sub-function returns the number of characters it output, which `ft_printf` accumulates to produce the final return value.
+Depending on the character following `%`, `ft_convert` calls the corresponding sub-function. Each sub-function returns the number of characters it output (or `-1` on write error), which `ft_printf` accumulates to produce the final return value.
 
 ```
 ft_convert()
@@ -120,20 +105,27 @@ ft_convert()
 
 ### Number conversion
 
-To convert a number to a string, **recursion** is used.
+To convert a number to a string, **recursion** is used. The function divides the number by its base repeatedly, printing digits from most significant to least significant.
 
-Example: integer → decimal string
-
+Example: `ft_putunsigned(1234)`:
 ```
-1234 → '4','3','2','1' (digits extracted in reverse order)
-     → "1234" (reversed before output)
+putunsigned(1234) → putunsigned(123) → putunsigned(12) → putunsigned(1)
+                                                           prints '1'
+                                        prints '2'
+                    prints '3'
+prints '4'
+→ output: "1234"
 ```
 
-For negative numbers, a `-` is printed first and the absolute value is converted. Special handling is required for `INT_MIN` (-2147483648), whose absolute value exceeds the range of `int`.
+For negative numbers in `ft_putnbr`, a `-` is printed first and the absolute value is converted as `unsigned int`. `INT_MIN` (-2147483648) is handled as a special case by delegating directly to `ft_putstr("-2147483648")`, which correctly propagates any write error via its return value.
+
+### `ft_strlen` return type
+
+`ft_strlen` returns `int` (not `size_t`) so that its result can be used directly as the return value of `ft_putstr` and passed to `write()` without type mismatch warnings under `-Wall -Wextra -Werror`.
 
 ### Return value
 
-`ft_printf` returns the **total number of characters** output. Each sub-function is also designed to return its own character count, which are summed up to produce the final return value.
+`ft_printf` returns the **total number of characters** output. Each sub-function is also designed to return its own character count (or `-1` on error), which are summed up to produce the final return value. On write error, `-1` is propagated up through the entire call chain.
 
 ## Resources
 
@@ -160,7 +152,7 @@ AI was not used for code generation or completion. The entire implementation was
 
 ## Description
 
-`ft_printf` は、C標準ライブラリの `printf()` 関数を再実装するプロジェクトです。  
+`ft_printf` は、C標準ライブラリの `printf()` 関数を再実装するプロジェクトです。
 可変長引数（variadic functions）の仕組みを学ぶことを主な目的としており、フォーマット文字列を解析して対応する変換を行うライブラリ `libftprintf.a` を作成します。
 
 対応するフォーマット指定子：
@@ -216,7 +208,7 @@ int main(void)
 
 ### 全体の設計方針
 
-`ft_printf` の実装は、**フォーマット文字列の逐次解析**を基本とします。文字列を先頭から1文字ずつ走査し、通常の文字はそのまま出力、`%` を検出した時点で次の文字を見てどの変換を行うかを判定します。
+`ft_printf` の実装は、**フォーマット文字列の逐次解析**を基本とします。整数インデックス `i` を使って文字列を先頭から1文字ずつ走査します。通常の文字はそのまま `write()` で出力し、`%` を検出した時点で次の文字を見てどの変換を行うかを判定します。
 
 ```
 ft_printf("Hello %s, you are %d years old.\n", name, age)
@@ -228,39 +220,24 @@ ft_printf("Hello %s, you are %d years old.\n", name, age)
 [5] '\n' → write() で出力
 ```
 
+メインループは各位置で `ft_process()` を呼び出します。`ft_process()` は2つのケースを処理します：
+
+- 現在の文字が `%` かつ次の文字が存在する場合：`ft_convert()` を呼び出し、`i` を2進める。
+- それ以外：文字をそのまま出力し、`i` を1進める。
+
+これにより、フォーマット文字列の末尾にある単独の `%` はリテラルの `%` として扱われます。
+
 ### 可変長引数の扱い
 
 C言語の `<stdarg.h>` が提供するマクロを使用します：
 
 - `va_start(ap, last)` : 可変引数リストの初期化
 - `va_arg(ap, type)` : 次の引数を指定した型で取得
-- `va_copy(dst, src)` : 引数リストのコピー（必要に応じて）
 - `va_end(ap)` : 引数リストの終了処理
-
-```c
-int ft_printf(const char *format, ...)
-{
-    va_list args;
-    int     count;
-
-    va_start(args, format);
-    count = 0;
-    while (*format)
-    {
-        if (*format == '%' && *(format + 1))
-            count += ft_convert(*++format, args);
-        else
-            count += ft_putchar(*format);
-        format++;
-    }
-    va_end(args);
-    return (count);
-}
-```
 
 ### 変換ディスパッチ
 
-`%` の次の文字に応じて `ft_convert` が対応するサブ関数を呼び出します。各サブ関数は出力した文字数を返し、`ft_printf` はそれを合算して最終的な文字数を戻り値として返します。
+`%` の次の文字に応じて `ft_convert` が対応するサブ関数を呼び出します。各サブ関数は出力した文字数（writeエラー時は `-1`）を返し、`ft_printf` はそれを合算して最終的な文字数を戻り値として返します。
 
 ```
 ft_convert()
@@ -276,20 +253,27 @@ ft_convert()
 
 ### 数値変換の考え方
 
-数値を文字列に変換する際は**再帰**を用います。
+数値を文字列に変換する際は**再帰**を用います。基数で割り続けることで、上位桁から順に出力します。
 
-例：整数 → 10進数文字列
-
+例：`ft_putunsigned(1234)`:
 ```
-1234 → '4','3','2','1' (逆順に取り出す)
-     → "1234" (逆順にして出力)
+putunsigned(1234) → putunsigned(123) → putunsigned(12) → putunsigned(1)
+                                                           '1' を出力
+                                        '2' を出力
+                    '3' を出力
+'4' を出力
+→ 出力: "1234"
 ```
 
-負数の場合は先頭に `-` を出力し、絶対値を変換します。ただし `INT_MIN`（-2147483648）は絶対値が `int` の範囲を超えるため、特別な処理が必要です。
+負数の場合（`ft_putnbr`）は先頭に `-` を出力し、絶対値を `unsigned int` として変換します。`INT_MIN`（-2147483648）は絶対値が `int` の範囲を超えるため、`ft_putstr("-2147483648")` に直接委譲する特別処理を行います。これにより writeエラーの戻り値も正しく伝播されます。
+
+### `ft_strlen` の戻り値型について
+
+`ft_strlen` は `size_t` ではなく `int` を返すようにしています。これにより、`ft_putstr` の戻り値として直接使用でき、`write()` への引数渡しでも型不一致の警告が `-Wall -Wextra -Werror` 環境で発生しません。
 
 ### 戻り値
 
-`ft_printf` は出力した**総文字数**を返します。各サブ関数も自身が出力した文字数を返すよう設計し、それを合算して最終的な戻り値とします。
+`ft_printf` は出力した**総文字数**を返します。各サブ関数も自身が出力した文字数（エラー時は `-1`）を返すよう設計し、エラーはコールチェーン全体で上位に伝播されます。
 
 ## Resources
 
