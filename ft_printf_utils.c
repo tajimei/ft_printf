@@ -17,7 +17,9 @@ int	ft_putchar(int c)
 	unsigned char	ch;
 
 	ch = (unsigned char)c;
-	return (write(1, &ch, 1));
+	if (write(1, &ch, 1) == -1)
+		return (-1);
+	return (1);
 }
 
 size_t	ft_strlen(const char *s)
@@ -71,10 +73,18 @@ int	ft_putnbr(int n)
 int	ft_putunsigned(unsigned int n)
 {
 	int	count;
+	int	ret;
 
 	count = 0;
 	if (n >= 10)
-		count += ft_putunsigned(n / 10);
-	count += ft_putchar('0' + (n % 10));
-	return (count);
+	{
+		ret = ft_putunsigned(n / 10);
+		if (ret == -1)
+			return (-1);
+		count += ret;
+	}
+	ret = ft_putchar('0' + (n % 10));
+	if (ret == -1)
+		return (-1);
+	return (count + ret);
 }

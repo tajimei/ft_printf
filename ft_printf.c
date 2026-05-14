@@ -33,11 +33,30 @@ static int	ft_convert(char specifier, va_list args)
 	return (0);
 }
 
+static int	ft_process(const char *format, int *i, va_list args)
+{
+	int	ret;
+
+	if (format[*i] == '%' && format[*i + 1])
+	{
+		ret = ft_convert(format[*i + 1], args);
+		if (ret == -1)
+			return (-1);
+		*i += 2;
+		return (ret);
+	}
+	if (ft_putchar(format[*i]) == -1)
+		return (-1);
+	(*i)++;
+	return (1);
+}
+
 int	ft_printf(const char *format, ...)
 {
 	va_list	args;
 	int		count;
 	int		i;
+	int		ret;
 
 	if (!format)
 		return (-1);
@@ -46,16 +65,13 @@ int	ft_printf(const char *format, ...)
 	i = 0;
 	while (format[i])
 	{
-		if (format[i] == '%' && format[i + 1])
+		ret = ft_process(format, &i, args);
+		if (ret == -1)
 		{
-			count += ft_convert(format[i + 1], args);
-			i += 2;
+			va_end(args);
+			return (-1);
 		}
-		else
-		{
-			count += ft_putchar(format[i]);
-			i++;
-		}
+		count += ret;
 	}
 	va_end(args);
 	return (count);
