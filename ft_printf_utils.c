@@ -52,7 +52,9 @@ int	ft_putnbr(int n)
 		return (ft_putstr("-2147483648"));
 	if (n < 0)
 	{
-		count += ft_putchar('-');
+		if (ft_putchar('-') == -1)
+			return (-1);
+		count++;
 		nb = (unsigned int)(-n);
 	}
 	else
