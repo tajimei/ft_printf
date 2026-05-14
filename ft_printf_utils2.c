@@ -6,7 +6,7 @@
 /*   By: mtajima <mtajima@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/11 19:48:11 by mtajima           #+#    #+#             */
-/*   Updated: 2026/05/14 23:16:00 by mtajima          ###   ########.fr       */
+/*   Updated: 2026/05/15 01:41:03 by mtajima          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,12 +25,12 @@ int	ft_puthex(unsigned long n, int uppercase)
 	count = 0;
 	if (n >= 16)
 	{
-		ret = ft_putunsigned(n / 16);
+		ret = ft_puthex(n / 16, uppercase);
 		if (ret == -1)
 			return (-1);
 		count += ret;
 	}
-	ret = ft_putchar('0' + (n % 16));
+	ret = ft_putchar(digits[n % 16]);
 	if (ret == -1)
 		return (-1);
 	count += ret;
