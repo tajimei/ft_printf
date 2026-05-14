@@ -19,7 +19,7 @@
 
 int		ft_printf(const char *format, ...);
 int		ft_putchar(int c);
-size_t	ft_strlen(const char *s);
+int		ft_strlen(const char *s);
 int		ft_putstr(char *str);
 int		ft_putnbr(int n);
 int		ft_putunsigned(unsigned int n);

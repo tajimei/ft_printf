@@ -17,14 +17,12 @@ int	ft_putchar(int c)
 	unsigned char	ch;
 
 	ch = (unsigned char)c;
-	if (write(1, &ch, 1) == -1)
-		return (-1);
-	return (1);
+	return (write(1, &ch, 1));
 }
 
-size_t	ft_strlen(const char *s)
+int	ft_strlen(const char *s)
 {
-	size_t	index;
+	int	index;
 
 	index = 0;
 	while (s[index])
@@ -41,9 +39,7 @@ int	ft_putstr(char *str)
 	if (!str)
 		return (ft_putstr("(null)"));
 	len = ft_strlen(str);
-	if (write(1, str, len) == -1)
-		return (-1);
-	return (len);
+	return (write(1, str, len));
 }
 
 int	ft_putnbr(int n)
@@ -53,10 +49,7 @@ int	ft_putnbr(int n)
 
 	count = 0;
 	if (n == INT_MIN)
-	{
-		ft_putstr("-2147483648");
-		return (11);
-	}
+		return (ft_putstr("-2147483648"));
 	if (n < 0)
 	{
 		count += ft_putchar('-');
