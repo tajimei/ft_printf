@@ -33,9 +33,6 @@ make
 make clean    # Remove object files
 make fclean   # Remove object files and libftprintf.a
 make re       # fclean + all
-
-# Build bonus part (optional)
-make bonus
 ```
 
 ### Linking with your project
@@ -192,9 +189,6 @@ make
 make clean    # オブジェクトファイルを削除
 make fclean   # オブジェクトファイルと libftprintf.a を削除
 make re       # fclean + all
-
-# ボーナスパートのビルド（任意）
-make bonus
 ```
 
 ### 自分のプロジェクトへの組み込み
