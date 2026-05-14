@@ -14,12 +14,10 @@
 
 int	ft_putchar(int c)
 {
-	char	ch;
+	unsigned char	ch;
 
-	ch = (char)c;
-	if (write(1, &ch, 1) == -1)
-		return (-1);
-	return (1);
+	ch = (unsigned char)c;
+	return (write(1, &ch, 1));
 }
 
 size_t	ft_strlen(const char *s)
